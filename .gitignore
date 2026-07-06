@@ -1,0 +1,44 @@
+# Secrets
+.env
+*.env
+**/.env
+
+# Node
+node_modules/
+
+# Python
+venv/
+**/venv/
+__pycache__/
+*.pyc
+
+# Unity generated (regenerated on open)
+Library/
+Temp/
+Obj/
+Build/
+Builds/
+Logs/
+UserSettings/
+MemoryCaptures/
+.vs/
+*.csproj
+*.sln
+*.unityproj
+*.booproj
+
+# Large model weights (backed up to Google Drive separately, not git)
+Qwen2.5-0.5B-Instruct/
+distilbert-finetuned-emotion/
+
+# Large binary assets (>100MB, GitHub limit; live in the Drive backup)
+*.glb
+*.fbx
+*.vrm
+*.blend
+*.safetensors
+*.pt
+
+# OS
+.DS_Store
+Thumbs.db

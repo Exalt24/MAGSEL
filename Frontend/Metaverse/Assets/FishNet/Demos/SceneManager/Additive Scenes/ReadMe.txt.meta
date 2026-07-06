@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 5a0da14a07796a943b41dc201bf8cd04
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 207815
+  packageName: 'FishNet: Networking Evolved'
+  packageVersion: 4.6.2R
+  assetPath: Assets/FishNet/Demos/SceneManager/Additive Scenes/ReadMe.txt
+  uploadId: 737117
