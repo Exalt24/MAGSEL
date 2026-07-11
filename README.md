@@ -1,6 +1,6 @@
-# MAGSEL
+# MAGSEL — Metaverse for Gender-Sensitive Social-Emotional Learning
 
-> A metaverse for gender-sensitive social-emotional education, where students learn inside a Unity 3D world that reads their emotional state in real time and adapts to it.
+> **MAGSEL** (Metaverse for Gender-Sensitive Social-Emotional Learning) is a metaverse for gender-sensitive social-emotional education, where students learn inside a Unity 3D world that reads their emotional state in real time and adapts to it.
 
 ![Unity](https://img.shields.io/badge/Unity-C%23-000000?logo=unity)
 ![Python](https://img.shields.io/badge/Python-ML-3776AB?logo=python&logoColor=white)
@@ -65,6 +65,8 @@ MAGSEL/
 
 `fine_tune_emotion.py` fine-tunes `distilbert-base-uncased` on the Hugging Face `emotion` dataset augmented with a custom `additional_data.xlsx`, over the six classes above (2 epochs, lr 2e-5, batch 32, fp16). It reports weighted F1 and accuracy on the held-out test split, roughly **92% accuracy / 0.93 weighted F1**. `accuracy_test.py` re-checks the live API against a labeled set and also prints per-class precision/recall, a confusion matrix, and latency.
 
+The `additional_data.xlsx` augmentation file is not included in this repo, so re-running `fine_tune_emotion.py` as-is trains on the Hugging Face `emotion` dataset alone; supply your own `additional_data.xlsx` (a `text`/`label` sheet) in `Metaverse Files/` to reproduce the augmented run.
+
 ## Getting started
 
 ### 1. Backend (accounts API)
@@ -118,6 +120,10 @@ Large model weights, base models, Unity's generated folders, `venv`, `node_modul
 ## Research
 
 Presented at WILLS 2025, Kyoto University of Foreign Studies. The work explores whether a metaverse that is aware of a learner's emotional state can improve engagement in social-emotional education.
+
+## License
+
+Released under the MIT License — see [LICENSE](LICENSE). This covers the original MAGSEL code; bundled third-party Unity assets (FishNet, Kenney kits, TextMesh Pro, VRM/UniGLTF, StarterAssets) keep their own licenses under `Frontend/Metaverse/Assets/`.
 
 ## Author
 
