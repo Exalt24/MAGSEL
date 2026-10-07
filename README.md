@@ -1,4 +1,4 @@
-# MAGSEL — Metaverse for Gender-Sensitive Social-Emotional Learning
+# MAGSEL: Metaverse for Gender-Sensitive Social-Emotional Learning
 
 > **MAGSEL** (Metaverse for Gender-Sensitive Social-Emotional Learning) is a metaverse for gender-sensitive social-emotional education, where students learn inside a Unity 3D world that reads their emotional state in real time and adapts to it.
 
@@ -26,8 +26,8 @@ MAGSEL combines an immersive 3D metaverse with on-device AI so that a learning e
 ```mermaid
 flowchart LR
     U["Unity Client<br/>(3D metaverse + WFC terrain)"]
-    A["AI Service — Flask :5002<br/>DistilBERT + Qwen2.5"]
-    B["Backend — Express<br/>MongoDB Atlas"]
+    A["AI Service (Flask :5002)<br/>DistilBERT + Qwen2.5"]
+    B["Backend (Express)<br/>MongoDB Atlas"]
     U -- "student text /predict" --> A
     A -- "emotion label + latency" --> U
     U -- "topic /generate_quiz, /generate_topic_chunk" --> A
@@ -37,7 +37,7 @@ flowchart LR
 ## Features
 
 - **Procedural terrain via Wave Function Collapse.** A WFC solver written from scratch in C# builds the world's terrain from tile constraints, with a networked manager so the environment stays consistent across clients and a benchmark harness to measure generation time.
-  `Frontend/Metaverse/Assets/Scripts/Terrain/` — `WaveFunctionCollapse.cs`, `Cell.cs`, `NetworkTerrainManager.cs`, `TerrainBenchmark.cs`
+  `Frontend/Metaverse/Assets/Scripts/Terrain/`: `WaveFunctionCollapse.cs`, `Cell.cs`, `NetworkTerrainManager.cs`, `TerrainBenchmark.cs`
 - **Real-time emotion detection.** A DistilBERT classifier fine-tuned on six emotions (sadness, joy, love, anger, fear, surprise) reads student text; Unity sends text to the API and adapts to the returned label.
   `Metaverse Files/appp.py` (`POST /predict`), `Frontend/Metaverse/Assets/Scripts/EmotionAnalyzer.cs`
 - **On-device learning content generation.** A local Qwen2.5-0.5B-Instruct model generates quiz questionnaires and extracts topics/context chunks from free text, returned as strict JSON.
@@ -123,8 +123,8 @@ Presented at WILLS 2025, Kyoto University of Foreign Studies. The work explores 
 
 ## License
 
-Released under the MIT License — see [LICENSE](LICENSE). This covers the original MAGSEL code; bundled third-party Unity assets (FishNet, Kenney kits, TextMesh Pro, VRM/UniGLTF, StarterAssets) keep their own licenses under `Frontend/Metaverse/Assets/`.
+Released under the MIT License, see [LICENSE](LICENSE). This covers the original MAGSEL code; bundled third-party Unity assets (FishNet, Kenney kits, TextMesh Pro, VRM/UniGLTF, StarterAssets) keep their own licenses under `Frontend/Metaverse/Assets/`.
 
 ## Author
 
-Daniel Alexis Cruz — [github.com/Exalt24](https://github.com/Exalt24) · [dacruz.vercel.app](https://dacruz.vercel.app)
+Daniel Alexis Cruz, [github.com/Exalt24](https://github.com/Exalt24) · [dacruz.vercel.app](https://dacruz.vercel.app)
