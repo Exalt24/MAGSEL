@@ -110,6 +110,9 @@ model = AutoModelForSequenceClassification.from_pretrained(model_ckpt, num_label
 # Training arguments
 batch_size = 32  # Increase this value
 model_name = "distilbert-finetuned-emotion"
+# transformers renamed evaluation_strategy to eval_strategy and later removed the old name, so pick whichever this install accepts
+import inspect
+EVAL_KW = 'eval_strategy' if 'eval_strategy' in inspect.signature(TrainingArguments.__init__).parameters else 'evaluation_strategy'
 training_args = TrainingArguments(
     output_dir=model_name,
     num_train_epochs=2,
@@ -117,7 +120,7 @@ training_args = TrainingArguments(
     per_device_train_batch_size=32,  # Larger batch size
     per_device_eval_batch_size=32,
     weight_decay=0.01,
-    evaluation_strategy='epoch',
+    **{EVAL_KW: 'epoch'},
     disable_tqdm=False,
     fp16=True,  # Use mixed precision
 )
