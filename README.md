@@ -15,20 +15,19 @@ A learning environment normally reacts to what a student clicks. MAGSEL reacts t
 ## What was hard
 
 - **Terrain that stays the same on every client.** The world is built with a Wave Function Collapse solver I wrote from scratch in C# (`Frontend/Metaverse/Assets/Scripts/Terrain/WaveFunctionCollapse.cs`). A networked manager keeps the generated terrain consistent across clients, and `TerrainBenchmark.cs` measures generation time.
-- **JSON from a 0.5B model.** `/generate_quiz` and `/generate_topic_chunk` need parseable JSON for the Unity side, which a small model does not reliably produce. The service strips markdown code fences (`remove_markdown_fences` in `appp.py`), tries `json.loads`, and on a parse failure returns the raw generated text under `generated_quiz` or `generated_topic_chunk` instead. It does not guarantee strict JSON, and the Unity side has to cope with the fallback shape.
+- **JSON from a 0.5B model.** `/generate_quiz` and `/generate_topic_chunk` need parseable JSON for the Unity side, which a small model does not reliably produce. The service strips markdown code fences (`remove_markdown_fences` in `appp.py`), tries `json.loads`, and on a parse failure returns the raw generated text under `generated_quiz` or `generated_topic_chunk` instead. It does not guarantee strict JSON.
 - **Surprise is mapped to joy.** `EmotionAnalyzer.cs` rewrites a `surprise` prediction to `joy` before it drives the terrain, so the client effectively uses five emotions.
 
 ## Architecture
 
 ```mermaid
-flowchart LR
+flowchart TD
     U["Unity client<br/>3D world + WFC terrain"]
     A["AI service, Flask :5002<br/>DistilBERT + Qwen2.5"]
     B["Backend, Express<br/>MongoDB Atlas"]
-    U -- "student text to /predict" --> A
+    U -- "text to /predict,<br/>topic to /generate_quiz" --> A
     A -- "emotion label + latency" --> U
-    U -- "topic to /generate_quiz" --> A
-    U -- "register and login" --> B
+    U -- "register, login" --> B
 ```
 
 ## Run it
