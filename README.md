@@ -42,7 +42,7 @@ You need Python (tested on 3.13) and a connection to Hugging Face for the datase
 cd "Metaverse Files"
 python -m venv venv && source venv/bin/activate     # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-python fine_tune_emotion.py       # about 19 minutes on CPU; writes distilbert-finetuned-emotion/
+python fine_tune_emotion.py       # about 19 minutes on CPU; writes distilbert-finetuned-emotion/ (a fresh full run of this committed file is unverified: see the caveat under Proof)
 ```
 
 It prints the validation and test metrics and a per-class report. To check that the pipeline runs end to end, add `--max-train-samples 2000 --epochs 1` (3.8 minutes on CPU here, including the downloads); that trains too little to reach the figures above. Then download `Qwen/Qwen2.5-0.5B-Instruct` into `Metaverse Files/Qwen2.5-0.5B-Instruct/` and start the service:
