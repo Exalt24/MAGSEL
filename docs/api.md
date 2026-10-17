@@ -50,7 +50,7 @@ Open `Frontend/Metaverse/` as a project in Unity. Start the AI service first. Th
 
 `fine_tune_emotion.py` fine-tunes `distilbert-base-uncased` on the Hugging Face `emotion` dataset, optionally augmented with a custom `additional_data.xlsx`, over six classes (sadness, joy, love, anger, fear, surprise): 2 epochs, learning rate 2e-5, batch 32, fp16. `accuracy_test.py` sends 48 hand-written sentences (eight per class) to the live API and prints per-class precision and recall, a confusion matrix and latency. `benchmark.py` times `/predict` (50 calls) and `/generate_quiz` (20 calls).
 
-The `additional_data.xlsx` file is not in this repo, so re-running the script trains on the Hugging Face dataset alone. Supply your own `text`/`label` sheet in `Metaverse Files/` to reproduce the augmented run.
+The `additional_data.xlsx` file is not in this repo, and the script reads it unconditionally, so it stops without it. Supply your own `text`/`label` sheet in `Metaverse Files/` to reproduce the augmented run, or remove the lines that load it to train on the Hugging Face dataset alone (the script also needs `dair-ai/emotion` as the dataset name on current `datasets` releases, a GPU for its CUDA calls, and `accelerate` installed).
 
 ## Repository structure
 

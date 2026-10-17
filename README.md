@@ -2,9 +2,11 @@
 
 A Unity metaverse for social-emotional learning that reads a student's text, classifies the emotion, and adapts to it.
 
-There is no demo GIF yet: the Unity client needs a local AI service and model weights that are not in the repo.
+![Terminal replay of the local MAGSEL AI service answering four typed sentences with the emotions sadness, joy, anger and fear and a latency of about 15 ms each](docs/demo.gif)
 
-**Proof:** DistilBERT emotion classifier at roughly 92% accuracy and 0.93 weighted F1 on the validation split of the Hugging Face `emotion` dataset (my fine-tune run; `fine_tune_emotion.py` evaluates on that split, but the figure itself is not recorded in the repo and is not re-run in CI).
+*The AI service the Unity client calls, running locally on CPU: four sentences I wrote, each answered with an emotion label and the service's own latency. Replayed in a terminal from a recorded session of the real service on 2026-10-17, using a re-run of this repo's fine-tune recipe.*
+
+**Proof:** DistilBERT emotion classifier at 93.5% accuracy and 0.934 weighted F1 on the validation split of the Hugging Face `emotion` dataset, and 91.9% and 0.918 on its test split. Measured on 2026-10-17 by re-running the fine-tune recipe (2 epochs, 19 minutes on CPU, Hugging Face data only); not re-run in CI.
 
 Solo research project, presented at the WILLS 2025 Conference, Kyoto University of Foreign Studies, Japan.
 
@@ -39,6 +41,8 @@ python fine_tune_emotion.py        # writes distilbert-finetuned-emotion/
 python appp.py                     # http://localhost:5002
 ```
 
+`fine_tune_emotion.py` does not run as committed on a fresh install. It reads `additional_data.xlsx`, which is not in the repo, calls `load_dataset("emotion")`, which current `datasets` releases no longer resolve (the dataset now lives at `dair-ai/emotion`), and makes CUDA-only calls; `requirements.txt` also lacks `accelerate`, which `Trainer` needs. The figures above come from the same recipe with those lines changed (no spreadsheet, `dair-ai/emotion`, CPU, fp16 off).
+
 Then open `Frontend/Metaverse/` in Unity. The committed client does not call `localhost:5002`: three scripts hard-code a tunnel URL, `https://humbly-magical-whippet.ngrok-free.app`, which I used during development. To run against your own service, change the URL in each of them to `http://localhost:5002`:
 
 | File | Field | Change to |
@@ -51,12 +55,12 @@ Register and login in the client point at `https://magsel.vercel.app/user/...`, 
 
 ## Tests
 
-`python accuracy_test.py` (in `Metaverse Files/`, with the service running) scores the live API on 48 hand-written sentences, eight per emotion, and prints per-class precision and recall, a confusion matrix and latency. It is a smoke check of the running service, not the held-out evaluation behind the 92% figure. `python benchmark.py` times the endpoints. There is no automated test suite or CI workflow for the Unity or Node parts.
+`python accuracy_test.py` (in `Metaverse Files/`, with the service running) scores the live API on 48 hand-written sentences, eight per emotion, and prints per-class precision and recall, a confusion matrix and latency. It is a smoke check of the running service, not the held-out evaluation behind the figures above. `python benchmark.py` times the endpoints. There is no automated test suite or CI workflow for the Unity or Node parts.
 
 ## Limits and not done
 
 - Model weights are not committed. The emotion model must be fine-tuned locally and Qwen downloaded from Hugging Face.
-- `additional_data.xlsx` (the custom augmentation set) is not in the repo, so a re-run trains on the Hugging Face dataset alone and may not match the 92% figure.
+- `additional_data.xlsx` (the custom augmentation set) is not in the repo, so the augmented run cannot be reproduced; the figures above are from the Hugging Face split alone.
 - No hosted demo. It is a research prototype, not a deployed product.
 - Account routes exist (`POST /user/register`, `POST /user/login`); I have not security-reviewed them for real student data.
 
