@@ -6,7 +6,9 @@ A Unity metaverse for social-emotional learning that reads a student's text, cla
 
 *The AI service the Unity client calls, running locally on CPU: four sentences I wrote, each answered with an emotion label and the service's own latency. Replayed in a terminal from a recorded session of the real service on 2026-10-17, using a re-run of this repo's fine-tune recipe.*
 
-**Proof:** DistilBERT emotion classifier at 93.5% accuracy and 0.934 weighted F1 on the validation split of the Hugging Face `dair-ai/emotion` dataset, and 91.9% and 0.918 on its test split (2 epochs, 19 minutes on CPU, Hugging Face data only). Measured on 2026-10-17 from an edited copy of the script; the committed script now carries those edits and I ran it end to end only as a 2,000-row, 1-epoch smoke test (52% test accuracy, as expected for that little training), so the full-run figures were not repeated on the committed file and are not re-run in CI.
+**Proof:** 93.5% accuracy and 0.934 weighted F1 on the validation split, 91.9% and 0.918 on the test split, for a DistilBERT emotion classifier fine-tuned on the Hugging Face `dair-ai/emotion` dataset (2 epochs, 19 minutes on CPU).
+
+*Source: `Metaverse Files/fine_tune_emotion.py`, measured 2026-10-17. Caveat: the figures come from an edited copy of that script, the committed file has only run as a 2,000-row, 1-epoch smoke test (52% test accuracy), and CI does not re-run it.*
 
 Solo research project, presented at the WILLS 2025 Conference, Kyoto University of Foreign Studies, Japan.
 
