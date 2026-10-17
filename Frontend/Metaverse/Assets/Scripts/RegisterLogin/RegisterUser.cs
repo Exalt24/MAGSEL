@@ -21,7 +21,7 @@ public class RegisterUser : MonoBehaviour
     [SerializeField] TextMeshProUGUI errorText;  // Assign this in the Inspector
     [SerializeField] GameObject loadingSpinner; // The loading spinner UI element
 
-    string registerURL = "https://magsel.vercel.app/user/register";
+    string registerURL = ApiConfig.AccountsBaseUrl + "/user/register";
 
     void Start()
     {

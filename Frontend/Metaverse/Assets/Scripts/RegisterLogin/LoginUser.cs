@@ -18,7 +18,7 @@ public class LoginUser : MonoBehaviour
     [SerializeField] TextMeshProUGUI errorText;  // Assign in Inspector
     [SerializeField] GameObject loadingSpinner; // The loading spinner UI element
 
-    string loginURL = "https://magsel.vercel.app/user/login";
+    string loginURL = ApiConfig.AccountsBaseUrl + "/user/login";
 
     void Start()
     {

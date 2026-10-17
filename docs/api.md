@@ -20,7 +20,7 @@ DBPASS=<mongodb password>
 
 ```bash
 cd "Metaverse Files"
-python -m venv venv && source venv/Scripts/activate   # Windows Git Bash
+python -m venv venv && source venv/Scripts/activate   # Windows Git Bash (macOS or Linux: venv/bin/activate)
 pip install -r requirements.txt
 python appp.py          # serves on http://localhost:5002
 ```
@@ -32,7 +32,7 @@ Model weights are not committed. Before the first run:
 
 ## Unity client
 
-Open `Frontend/Metaverse/` as a project in Unity. Start the AI service first. The committed client does not point at `http://localhost:5002`: `EmotionAnalyzer.cs`, `AdaptiveQuiz.cs` and `TopicChooser.cs` hard-code an ngrok URL, so set their endpoint fields to `http://localhost:5002/...` (see the table in the README), and set the register and login URLs in `RegisterUser.cs` and `LoginUser.cs` to your own backend.
+Open `Frontend/Metaverse/` as a project in Unity. Start the AI service first. The client reads its server addresses from one file, `Assets/Scripts/ApiConfig.cs`: `AiServiceBaseUrl` (default `http://localhost:5002`, used by `EmotionAnalyzer.cs`, `AdaptiveQuiz.cs` and `TopicChooser.cs`) and `AccountsBaseUrl` (default `http://localhost:3000`, used by `RegisterUser.cs` and `LoginUser.cs`). Change those two constants to point at a hosted copy.
 
 ## Endpoints
 

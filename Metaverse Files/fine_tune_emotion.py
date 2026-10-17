@@ -1,169 +1,136 @@
-# Import necessary libraries
-import os
-import pandas as pd
-import torch
-from datasets import load_dataset, Dataset, concatenate_datasets, ClassLabel
-from transformers import (
-    AutoTokenizer,
-    AutoModelForSequenceClassification,
-    TrainingArguments,
-    Trainer,
-)
-from sklearn.metrics import accuracy_score, f1_score
-import matplotlib.pyplot as plt
+"""Fine-tune DistilBERT on the Hugging Face emotion dataset (six labels).
+
+Runs on CPU or CUDA with no extra data files:
+
+    python fine_tune_emotion.py                      # full recipe, 2 epochs
+    python fine_tune_emotion.py --max-train-samples 2000 --epochs 1   # quick smoke run
+    python fine_tune_emotion.py --plots              # also show the two class plots
+
+It writes the model to ./distilbert-finetuned-emotion/ (checkpoints inside, final
+weights at the top level). appp.py loads checkpoint-1000, which the full
+2-epoch recipe produces (16,000 training rows / batch 32 = 500 steps per epoch).
+"""
+import argparse
+import inspect
+
 import numpy as np
-
-# Limit GPU usage
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'  # Use GPU 0
-os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:1024'  # Increase to 1GB
-
-# Check device
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print("Using device:", device)
-
-from datasets import load_dataset, Dataset
-import pandas as pd
-
-# Load the emotion dataset
-emotion = load_dataset("emotion")
-emotion_train = emotion["train"]  # Focus only on the 'train' split for now
-
-# Load the Excel file
-additional_data = pd.read_excel("additional_data.xlsx")
-
-# Convert the DataFrame to a Hugging Face Dataset
-additional_dataset = Dataset.from_pandas(additional_data)
-
-# Get the ClassLabel feature from the original dataset
-label_feature = emotion_train.features["label"]
-
-# Convert the 'label' column in additional_dataset to use the same ClassLabel
-additional_dataset = additional_dataset.map(
-    lambda x: {"label": label_feature.str2int(x["label"])}  # Convert string labels to integers
-    if isinstance(x["label"], str) else {"label": x["label"]}  # Retain integer labels
+import torch
+from datasets import load_dataset
+from sklearn.metrics import accuracy_score, classification_report, f1_score
+from transformers import (
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    Trainer,
+    TrainingArguments,
 )
 
-# Apply ClassLabel to the label column
-additional_dataset = additional_dataset.cast_column("label", label_feature)
+parser = argparse.ArgumentParser()
+parser.add_argument("--epochs", type=int, default=2)
+parser.add_argument("--output-dir", default="distilbert-finetuned-emotion")
+parser.add_argument("--max-train-samples", type=int, default=None,
+                    help="train on the first N rows only (smoke test)")
+parser.add_argument("--plots", action="store_true",
+                    help="show the class-frequency and words-per-tweet plots (blocks until closed)")
+args = parser.parse_args()
 
-# Combine the datasets
-emotion_train = concatenate_datasets([emotion_train, additional_dataset])
-
-
-# Combine the datasets
-emotion_train = concatenate_datasets([emotion_train, additional_dataset])
-
-# Convert the updated train split to Pandas DataFrame for preview
-df = emotion_train.to_pandas()  # Use 'to_pandas' directly
-print(df.head())
-
-# Extract class names from the original dataset
+# The dataset moved from "emotion" to "dair-ai/emotion"; older names no longer resolve.
+emotion = load_dataset("dair-ai/emotion")
 classes = emotion["train"].features["label"].names
 print("Classes:", classes)
 
-# Add a human-readable label name column
-df["label_name"] = df["label"].apply(lambda x: classes[x])
-print(df.head())
+if args.plots:
+    import matplotlib.pyplot as plt
 
-# Visualize class distribution
-label_counts = df['label_name'].value_counts(ascending=True)
-label_counts.plot.barh()
-plt.title('Frequency of Classes')
-plt.show()
+    df = emotion["train"].to_pandas()
+    df["label_name"] = df["label"].apply(lambda x: classes[x])
+    df["label_name"].value_counts(ascending=True).plot.barh()
+    plt.title("Frequency of Classes")
+    plt.show()
+    df["Words Per Tweet"] = df["text"].str.split().apply(len)
+    df.boxplot(column="Words Per Tweet", by="label_name")
+    plt.title("Words Per Tweet by Class")
+    plt.suptitle("")
+    plt.show()
 
-# Add words per tweet column
-df['Words Per Tweet'] = df['text'].str.split().apply(len)
-df.boxplot(column='Words Per Tweet', by='label_name')
-plt.title('Words Per Tweet by Class')
-plt.suptitle('')
-plt.show()
+if args.max_train_samples:
+    emotion["train"] = emotion["train"].select(range(args.max_train_samples))
 
-# Tokenizer setup
+use_cuda = torch.cuda.is_available()
+device = torch.device("cuda:0" if use_cuda else "cpu")
+print("Using device:", device)
+
 model_ckpt = "distilbert-base-uncased"
 tokenizer = AutoTokenizer.from_pretrained(model_ckpt)
 
-# Tokenization example
-text = "I love Machine Learning! Tokenization is awesome"
-encoded_text = tokenizer(text)
-print("Encoded text:", encoded_text)
-tokens = tokenizer.convert_ids_to_tokens(encoded_text.input_ids)
-print("Tokens:", tokens)
-print("Vocab size:", tokenizer.vocab_size, "Max length:", tokenizer.model_max_length)
 
-# Reset dataset format
-emotion.reset_format()
-
-# Tokenization function
 def tokenize(batch):
-    return tokenizer(batch['text'], padding=True, truncation=True)
+    return tokenizer(batch["text"], padding=True, truncation=True)
 
-print("Tokenization sample:", tokenize(emotion['train'][:5]))
 
-# Tokenize dataset
 emotions_encoded = emotion.map(tokenize, batched=True, batch_size=None)
-print(emotions_encoded)
 
-# Define model
-num_labels = len(classes)
-model = AutoModelForSequenceClassification.from_pretrained(model_ckpt, num_labels=num_labels).to(device)
+model = AutoModelForSequenceClassification.from_pretrained(
+    model_ckpt, num_labels=len(classes)
+).to(device)
 
-# Training arguments
-batch_size = 32  # Increase this value
-model_name = "distilbert-finetuned-emotion"
-# transformers renamed evaluation_strategy to eval_strategy and later removed the old name, so pick whichever this install accepts
-import inspect
-EVAL_KW = 'eval_strategy' if 'eval_strategy' in inspect.signature(TrainingArguments.__init__).parameters else 'evaluation_strategy'
+# transformers renamed evaluation_strategy to eval_strategy and later dropped the old
+# name, and renamed Trainer(tokenizer=...) to processing_class; pick what this install takes.
+ta_params = inspect.signature(TrainingArguments.__init__).parameters
+eval_kw = "eval_strategy" if "eval_strategy" in ta_params else "evaluation_strategy"
 training_args = TrainingArguments(
-    output_dir=model_name,
-    num_train_epochs=2,
+    output_dir=args.output_dir,
+    num_train_epochs=args.epochs,
     learning_rate=2e-5,
-    per_device_train_batch_size=32,  # Larger batch size
+    per_device_train_batch_size=32,
     per_device_eval_batch_size=32,
     weight_decay=0.01,
-    **{EVAL_KW: 'epoch'},
     disable_tqdm=False,
-    fp16=True,  # Use mixed precision
+    fp16=use_cuda,  # mixed precision only exists on CUDA
+    **{eval_kw: "epoch"},
 )
-torch.cuda.set_per_process_memory_fraction(0.8, 0)  # Use 80% of GPU memory
 
-# Metrics function
+
 def compute_metrics(pred):
     labels = pred.label_ids
     preds = pred.predictions.argmax(-1)
-    f1 = f1_score(labels, preds, average='weighted')
-    acc = accuracy_score(labels, preds)
-    return {"accuracy": acc, "f1": f1}
+    return {
+        "accuracy": accuracy_score(labels, preds),
+        "f1": f1_score(labels, preds, average="weighted"),
+    }
 
-# Trainer setup
+
+tok_kw = (
+    {"processing_class": tokenizer}
+    if "processing_class" in inspect.signature(Trainer.__init__).parameters
+    else {"tokenizer": tokenizer}
+)
 trainer = Trainer(
     model=model,
     args=training_args,
     compute_metrics=compute_metrics,
-    train_dataset=emotions_encoded['train'],
-    eval_dataset=emotions_encoded['validation'],
-    tokenizer=tokenizer,
+    train_dataset=emotions_encoded["train"],
+    eval_dataset=emotions_encoded["validation"],
+    **tok_kw,
 )
 
-# Train the model
 trainer.train()
+trainer.save_model(args.output_dir)
 
-# Evaluate the model
-preds_outputs = trainer.predict(emotions_encoded['test'])
-print("Evaluation metrics:", preds_outputs.metrics)
+# Both splits, so the figures can be re-checked against the README.
+for split in ("validation", "test"):
+    out = trainer.predict(emotions_encoded[split])
+    print(f"{split} metrics:", out.metrics)
 
-# Classification report
-y_preds = np.argmax(preds_outputs.predictions, axis=1)
-y_true = emotions_encoded['test'][:]['label']
-from sklearn.metrics import classification_report
-print("Classification report:")
+out = trainer.predict(emotions_encoded["test"])
+y_preds = np.argmax(out.predictions, axis=1)
+y_true = emotions_encoded["test"]["label"]
+print("Classification report (test):")
 print(classification_report(y_true, y_preds, target_names=classes))
 
-# Test the model with new input
+# Sanity prediction on one sentence.
 text = "I want to kill you"
-input_encoded = tokenizer(text, return_tensors='pt').to(device)
+enc = tokenizer(text, return_tensors="pt").to(device)
 with torch.no_grad():
-    outputs = model(**input_encoded)
-
-logits = outputs.logits
+    logits = model(**enc).logits
 pred = torch.argmax(logits, dim=1).item()
 print("Prediction:", pred, "Class:", classes[pred])

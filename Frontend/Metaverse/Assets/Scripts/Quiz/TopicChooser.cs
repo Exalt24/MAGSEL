@@ -30,7 +30,7 @@ public class TopicChooserUI : MonoBehaviour
     [Tooltip("A prefab that contains a Text component for displaying a single chunk.")]
     [SerializeField] private GameObject chunkTextPrefab;
 
-    private string topicChunkEndpoint = "https://humbly-magical-whippet.ngrok-free.app/generate_topic_chunk";
+    private string topicChunkEndpoint = ApiConfig.AiServiceBaseUrl + "/generate_topic_chunk";
 
     [Header("Quiz Manager Reference")]
     public AdaptiveQuiz adaptiveQuiz;

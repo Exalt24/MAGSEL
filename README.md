@@ -6,7 +6,7 @@ A Unity metaverse for social-emotional learning that reads a student's text, cla
 
 *The AI service the Unity client calls, running locally on CPU: four sentences I wrote, each answered with an emotion label and the service's own latency. Replayed in a terminal from a recorded session of the real service on 2026-10-17, using a re-run of this repo's fine-tune recipe.*
 
-**Proof:** DistilBERT emotion classifier at 93.5% accuracy and 0.934 weighted F1 on the validation split of the Hugging Face `emotion` dataset, and 91.9% and 0.918 on its test split. Measured on 2026-10-17 by re-running the fine-tune recipe (2 epochs, 19 minutes on CPU, Hugging Face data only); not re-run in CI.
+**Proof:** DistilBERT emotion classifier at 93.5% accuracy and 0.934 weighted F1 on the validation split of the Hugging Face `dair-ai/emotion` dataset, and 91.9% and 0.918 on its test split (2 epochs, 19 minutes on CPU, Hugging Face data only). Measured on 2026-10-17 from an edited copy of the script; the committed script now carries those edits and I ran it end to end only as a 2,000-row, 1-epoch smoke test (52% test accuracy, as expected for that little training), so the full-run figures were not repeated on the committed file and are not re-run in CI.
 
 Solo research project, presented at the WILLS 2025 Conference, Kyoto University of Foreign Studies, Japan.
 
@@ -34,24 +34,22 @@ flowchart TD
 
 ## Run it
 
-Only the install and the last line run as committed. `python fine_tune_emotion.py` does not run on a fresh install without edits: it reads `additional_data.xlsx`, which is not in the repo, calls `load_dataset("emotion")`, which current `datasets` releases no longer resolve (the dataset now lives at `dair-ai/emotion`), and makes CUDA-only calls; `requirements.txt` also lacks `accelerate`, which `Trainer` needs. The figures above come from the same recipe with those lines changed (no spreadsheet, `dair-ai/emotion`, CPU, fp16 off).
+You need Python (tested on 3.13) and a connection to Hugging Face for the dataset and the two base models. No GPU is needed: the fine-tune uses CUDA when it finds it and falls back to CPU otherwise.
 
 ```bash
-cd "Metaverse Files" && pip install -r requirements.txt     # works as committed
-python fine_tune_emotion.py        # NEEDS EDITS first (see above); writes distilbert-finetuned-emotion/
-# download Qwen/Qwen2.5-0.5B-Instruct into "Metaverse Files/Qwen2.5-0.5B-Instruct/"
-python appp.py                     # http://localhost:5002
+cd "Metaverse Files"
+python -m venv venv && source venv/bin/activate     # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python fine_tune_emotion.py       # about 19 minutes on CPU; writes distilbert-finetuned-emotion/
 ```
 
-Then open `Frontend/Metaverse/` in Unity. The committed client does not call `localhost:5002`: three scripts hard-code a tunnel URL, `https://humbly-magical-whippet.ngrok-free.app`, which I used during development. To run against your own service, change the URL in each of them to `http://localhost:5002`:
+It prints the validation and test metrics and a per-class report. To check that the pipeline runs end to end, add `--max-train-samples 2000 --epochs 1` (3.8 minutes on CPU here, including the downloads); that trains too little to reach the figures above. Then download `Qwen/Qwen2.5-0.5B-Instruct` into `Metaverse Files/Qwen2.5-0.5B-Instruct/` and start the service:
 
-| File | Field | Change to |
-|---|---|---|
-| `Frontend/Metaverse/Assets/Scripts/EmotionAnalyzer.cs` | `apiUrl` | `http://localhost:5002/predict` |
-| `Frontend/Metaverse/Assets/Scripts/Quiz/AdaptiveQuiz.cs` | `apiUrl` | `http://localhost:5002/generate_quiz` |
-| `Frontend/Metaverse/Assets/Scripts/Quiz/TopicChooser.cs` | `topicChunkEndpoint` | `http://localhost:5002/generate_topic_chunk` |
+```bash
+python appp.py                    # http://localhost:5002
+```
 
-Register and login in the client point at `https://magsel.vercel.app/user/...`, a hosted copy of the accounts backend that did not answer when I checked, so run `Backend/` yourself and change `loginURL` in `LoginUser.cs` and `registerURL` in `RegisterUser.cs` too. The endpoint list is in [docs/api.md](docs/api.md).
+Then open `Frontend/Metaverse/` in Unity. Every server address the client uses is in one file, `Frontend/Metaverse/Assets/Scripts/ApiConfig.cs`: `AiServiceBaseUrl` defaults to `http://localhost:5002` and `AccountsBaseUrl` to `http://localhost:3000`, where `Backend/` listens once you have created its `.env`. I did not open the Unity project after moving the addresses into that file, so it has not been compiled since. The endpoint list is in [docs/api.md](docs/api.md).
 
 ## Tests
 
@@ -60,7 +58,7 @@ Register and login in the client point at `https://magsel.vercel.app/user/...`, 
 ## Limits and not done
 
 - Model weights are not committed. The emotion model must be fine-tuned locally and Qwen downloaded from Hugging Face.
-- `additional_data.xlsx` (the custom augmentation set) is not in the repo, so the augmented run cannot be reproduced; the figures above are from the Hugging Face split alone.
+- An earlier version of the fine-tune also trained on a custom spreadsheet of extra sentences (`additional_data.xlsx`), which is not in the repo. The committed recipe and the figures above use the Hugging Face data only.
 - No hosted demo. It is a research prototype, not a deployed product.
 - Account routes exist (`POST /user/register`, `POST /user/login`); I have not security-reviewed them for real student data.
 

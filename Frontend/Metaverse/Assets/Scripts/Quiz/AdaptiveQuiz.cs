@@ -6,7 +6,7 @@ using System;
 
 public class AdaptiveQuiz : MonoBehaviour
 {
-    private string apiUrl = "https://humbly-magical-whippet.ngrok-free.app/generate_quiz";
+    private string apiUrl = ApiConfig.AiServiceBaseUrl + "/generate_quiz";
     private const float TimeoutDuration = 500f;
 
     [SerializeField] private GameManager gameManager;

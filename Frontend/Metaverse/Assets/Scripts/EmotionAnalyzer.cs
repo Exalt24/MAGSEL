@@ -4,8 +4,8 @@ using UnityEngine.Networking;
 
 public class EmotionAnalyzer : MonoBehaviour
 {
-    // URL of your Flask API
-    private string apiUrl = "https://humbly-magical-whippet.ngrok-free.app/predict";
+    // Flask API endpoint; the base address is set in ApiConfig.cs
+    private string apiUrl = ApiConfig.AiServiceBaseUrl + "/predict";
     public WaveFunctionCollapse waveFunctionCollapse;
     public SkyboxController skyboxController;
     public AdaptiveQuiz adaptiveQuiz;
