@@ -34,14 +34,14 @@ flowchart TD
 
 ## Run it
 
+Only the install and the last line run as committed. `python fine_tune_emotion.py` does not run on a fresh install without edits: it reads `additional_data.xlsx`, which is not in the repo, calls `load_dataset("emotion")`, which current `datasets` releases no longer resolve (the dataset now lives at `dair-ai/emotion`), and makes CUDA-only calls; `requirements.txt` also lacks `accelerate`, which `Trainer` needs. The figures above come from the same recipe with those lines changed (no spreadsheet, `dair-ai/emotion`, CPU, fp16 off).
+
 ```bash
-cd "Metaverse Files" && pip install -r requirements.txt
-python fine_tune_emotion.py        # writes distilbert-finetuned-emotion/
+cd "Metaverse Files" && pip install -r requirements.txt     # works as committed
+python fine_tune_emotion.py        # NEEDS EDITS first (see above); writes distilbert-finetuned-emotion/
 # download Qwen/Qwen2.5-0.5B-Instruct into "Metaverse Files/Qwen2.5-0.5B-Instruct/"
 python appp.py                     # http://localhost:5002
 ```
-
-`fine_tune_emotion.py` does not run as committed on a fresh install. It reads `additional_data.xlsx`, which is not in the repo, calls `load_dataset("emotion")`, which current `datasets` releases no longer resolve (the dataset now lives at `dair-ai/emotion`), and makes CUDA-only calls; `requirements.txt` also lacks `accelerate`, which `Trainer` needs. The figures above come from the same recipe with those lines changed (no spreadsheet, `dair-ai/emotion`, CPU, fp16 off).
 
 Then open `Frontend/Metaverse/` in Unity. The committed client does not call `localhost:5002`: three scripts hard-code a tunnel URL, `https://humbly-magical-whippet.ngrok-free.app`, which I used during development. To run against your own service, change the URL in each of them to `http://localhost:5002`:
 
