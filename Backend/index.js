@@ -4,8 +4,10 @@ const app = express();
 const mongoose = require('mongoose');
 const PORT = process.env.PORT || 3000;
 
-DBUSER = process.env.DBUSER;
-DBPASS = process.env.DBPASS;
+const DBUSER = process.env.DBUSER;
+const DBPASS = process.env.DBPASS;
+// MONGO_URI wins when set (CI and local tests point it at a throwaway database); otherwise the Atlas cluster is used as before.
+const MONGO_URI = process.env.MONGO_URI || `mongodb+srv://${DBUSER}:${DBPASS}@logincluster.xecdzgm.mongodb.net/Metaverse`;
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -18,7 +20,7 @@ app.get('/', (req, res) => {
 const userRoutes = require('./src/Routes/UserRoutes');
 app.use('/user', userRoutes);
 
-mongoose.connect(`mongodb+srv://${DBUSER}:${DBPASS}@logincluster.xecdzgm.mongodb.net/Metaverse`).then(() => {
+mongoose.connect(MONGO_URI).then(() => {
     console.log('Connected to the database');
 
     app.listen(PORT, () => {

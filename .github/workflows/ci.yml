@@ -16,6 +16,11 @@ jobs:
   node-Backend:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
     defaults:
       run:
         working-directory: "Backend"
@@ -28,7 +33,10 @@ jobs:
           cache-dependency-path: "Backend/package-lock.json"
       - name: Install
         run: npm ci
-      # DROPPED, failed locally when this file was made: npm test
+      - name: Smoke test against a throwaway MongoDB
+        run: npm test
+        env:
+          MONGO_URI: mongodb://127.0.0.1:27017/magsel_ci
   python-Metaverse-Files:
     runs-on: ubuntu-latest
     timeout-minutes: 15
