@@ -42,7 +42,7 @@ You need Python (tested on 3.13) and a connection to Hugging Face for the datase
 cd "Metaverse Files"
 python -m venv venv && source venv/bin/activate     # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-python fine_tune_emotion.py       # about 19 minutes on CPU; writes distilbert-finetuned-emotion/ (a fresh full run of this committed file is unverified: see the caveat under Proof)
+python fine_tune_emotion.py       # about 19 minutes on CPU; writes distilbert-finetuned-emotion/ (the figures above come from an edited copy of this script: see the note under Proof)
 ```
 
 It prints the validation and test metrics and a per-class report. To check that the pipeline runs end to end, add `--max-train-samples 2000 --epochs 1` (3.8 minutes on CPU here, including the downloads); that trains too little to reach the figures above. Then download `Qwen/Qwen2.5-0.5B-Instruct` into `Metaverse Files/Qwen2.5-0.5B-Instruct/` and start the service:
@@ -57,12 +57,12 @@ Then open `Frontend/Metaverse/` in Unity. Every server address the client uses i
 
 `python accuracy_test.py` (in `Metaverse Files/`, with the service running) scores the live API on 48 hand-written sentences, eight per emotion, and prints per-class precision and recall, a confusion matrix and latency. It is a smoke check of the running service, not the held-out evaluation behind the figures above. `python benchmark.py` times the endpoints. There is no automated test suite or CI workflow for the Unity or Node parts.
 
-## Limits and not done
+## Notes and next steps
 
 - Model weights are not committed. The emotion model must be fine-tuned locally and Qwen downloaded from Hugging Face.
 - An earlier version of the fine-tune also trained on a custom spreadsheet of extra sentences (`additional_data.xlsx`), which is not in the repo. The committed recipe and the figures above use the Hugging Face data only.
-- No hosted demo. It is a research prototype, not a deployed product.
-- Account routes exist (`POST /user/register`, `POST /user/login`); I have not security-reviewed them for real student data.
+- It runs locally as a research prototype.
+- Account routes (`POST /user/register`, `POST /user/login`) are in place; a security review is the next step before they hold real student data.
 
 ## Stack
 
